@@ -1,0 +1,77 @@
+struct TrieNode
+{
+    struct TrieNode* child[2];
+};
+
+struct TrieNode* createNode()
+{
+    struct TrieNode* node = (struct TrieNode*)malloc(sizeof(struct TrieNode));
+
+    node->child[0] = NULL;
+    node->child[1] = NULL;
+
+    return node;
+}
+
+void insert(struct TrieNode* root, int num)
+{
+    struct TrieNode* curr = root;
+
+    for (int i = 30; i >= 0; i--)
+    {
+        int bit = (num >> i) & 1;
+
+        if (curr->child[bit] == NULL)
+            curr->child[bit] = createNode();
+
+        curr = curr->child[bit];
+    }
+}
+
+int search(struct TrieNode* root, int num)
+{
+    struct TrieNode* curr = root;
+    int result = 0;
+
+    for (int i = 30; i >= 0; i--)
+    {
+        int bit = (num >> i) & 1;
+
+        // choose opposite bit to maximize XOR
+        if (curr->child[1 - bit] != NULL)
+        {
+            result = result | (1 << i);
+            curr = curr->child[1 - bit];
+        }
+        else
+        {
+            curr = curr->child[bit];
+        }
+    }
+
+    return result;
+}
+
+int findMaximumXOR(int* nums, int numsSize)
+{
+    struct TrieNode* root = createNode();
+
+    // Insert all numbers into Trie
+    for (int i = 0; i < numsSize; i++)
+    {
+        insert(root, nums[i]);
+    }
+
+    int maxXOR = 0;
+
+    // Find best XOR for each number
+    for (int i = 0; i < numsSize; i++)
+    {
+        int value = search(root, nums[i]);
+
+        if (value > maxXOR)
+            maxXOR = value;
+    }
+
+    return maxXOR;
+}
