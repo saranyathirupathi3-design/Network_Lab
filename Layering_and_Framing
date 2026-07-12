@@ -1,0 +1,1226 @@
+#include<stdio.h>
+#include<stdlib.h>
+#include<string.h>
+#include<time.h>
+
+struct NetworkNode
+{
+    char url[50];
+
+    int sourceIp[4];
+    int destinationIp[4];
+
+    char sourceMac[20];
+    char destinationMac[20];
+};
+
+struct NetworkNode node[20];
+
+int nodeCount = 0;
+
+
+/* File */
+
+char fileName[50];
+char text[1000];
+
+int textLength;
+
+
+
+int asciiValue[1000];
+char binaryValue[1000][9];
+
+char allBinary[10000];
+int binaryLength;
+
+
+
+int sourcePort;
+int destinationPort;
+
+char sourcePortBinary[17];
+char destinationPortBinary[17];
+
+int segmentSize;
+int totalSegment;
+char segment[100][200];
+
+
+
+int packetSize;
+int totalPacket;
+char packet[100][200];
+
+
+
+int fragmentSize;
+int totalFragment;
+char fragment[200][100];
+
+
+
+int frameSize;
+int totalFrame;
+char frame[200][100];
+
+int paddingBits[200];
+
+
+
+char sourceUrl[50];
+char destinationUrl[50];
+
+int sourceIndex = -1;
+int destinationIndex = -1;
+
+
+
+
+void addNetworkNode();
+void deleteNetworkNode();
+void displayTable();
+
+void startLayers();
+
+void readFile();
+
+void textToAscii();
+void asciiToBinary();
+
+void generatePort();
+void searchUrl();
+
+void segmentDivision();
+void packetDivision();
+void fragmentDivision();
+void frameDivision();
+
+void decimalToBinary(int num);
+void intToBinary16(int num,char binary[]);
+
+void macToBinary(char mac[]);
+
+void sourceIpBinary();
+void destinationIpBinary();
+void destinationIpDecimal();
+
+void sourceMacBinary();
+void destinationMacBinary();
+void printSpaces(int n);  
+void applicationLayer();
+void transportLayer();
+void networkLayer();
+void dataLinkLayer();
+void physicalLayer();
+
+
+
+int main()
+{
+    int choice;
+
+    while(1)
+    {
+        printf("\n");
+        printf("\n========================================");
+        printf("\n      COMPUTER NETWORK SIMULATION");
+        printf("\n========================================");
+
+        printf("\n1. Add Network Node");
+        printf("\n2. Delete Network Node");
+        printf("\n3. Display Network Table");
+        printf("\n4. Display Layers");
+        printf("\n5. Exit");
+
+        printf("\n\nEnter Choice : ");
+        scanf("%d",&choice);
+
+        switch(choice)
+        {
+            case 1:
+
+                addNetworkNode();
+                break;
+
+            case 2:
+
+                deleteNetworkNode();
+                break;
+
+            case 3:
+
+                displayTable();
+                break;
+
+            case 4:
+
+                startLayers();
+                break;
+
+            case 5:
+
+                printf("\nThank You...\n");
+                exit(0);
+
+            default:
+
+                printf("\nInvalid Choice");
+        }
+    }
+
+    return 0;
+}
+void addNetworkNode()
+{
+    if(nodeCount >= 20)
+    {
+        printf("\nNetwork Table Full");
+        return;
+    }
+
+    printf("\nEnter URL : ");
+    scanf("%s",node[nodeCount].url);
+
+
+    printf("\nEnter Source IP : ");
+    scanf("%d.%d.%d.%d",
+          &node[nodeCount].sourceIp[0],
+          &node[nodeCount].sourceIp[1],
+          &node[nodeCount].sourceIp[2],
+          &node[nodeCount].sourceIp[3]);
+
+
+    printf("\nEnter Destination IP : ");
+    scanf("%d.%d.%d.%d",
+          &node[nodeCount].destinationIp[0],
+          &node[nodeCount].destinationIp[1],
+          &node[nodeCount].destinationIp[2],
+          &node[nodeCount].destinationIp[3]);
+
+
+    printf("\nEnter Source MAC : ");
+    scanf("%s",node[nodeCount].sourceMac);
+
+
+    printf("\nEnter Destination MAC : ");
+    scanf("%s",node[nodeCount].destinationMac);
+
+
+    nodeCount++;
+
+    printf("\nNetwork Node Added Successfully\n");
+
+    displayTable();
+}
+
+
+
+void deleteNetworkNode()
+{
+    char url[50];
+    int i,j;
+    int found = 0;
+
+
+    printf("\nEnter URL to Delete : ");
+    scanf("%s",url);
+
+
+    for(i=0;i<nodeCount;i++)
+    {
+        if(strcmp(url,node[i].url)==0)
+        {
+            found = 1;
+
+            for(j=i;j<nodeCount-1;j++)
+            {
+                node[j] = node[j+1];
+            }
+
+            nodeCount--;
+
+            printf("\nRecord Deleted Successfully\n");
+
+            break;
+        }
+    }
+
+
+    if(found==0)
+    {
+        printf("\nURL Not Found\n");
+    }
+
+    displayTable();
+}
+
+
+
+void displayTable()
+{
+    int i;
+    char sourceIp[20];
+    char destinationIp[20];
+
+    printf("\n");
+    printf("========================================================================================================\n");
+    printf("S.No  URL                 Source IP         Destination IP    Source MAC      Destination MAC\n");
+    printf("========================================================================================================\n");
+
+    for(i = 0; i < nodeCount; i++)
+    {
+        /* S.No */
+        printf("%d", i + 1);
+        printSpaces(5);
+
+        /* URL */
+        printf("%s", node[i].url);
+        printSpaces(20 - strlen(node[i].url));
+
+        /* Source IP */
+        sprintf(sourceIp, "%d.%d.%d.%d",
+                node[i].sourceIp[0],
+                node[i].sourceIp[1],
+                node[i].sourceIp[2],
+                node[i].sourceIp[3]);
+
+        printf("%s", sourceIp);
+        printSpaces(18 - strlen(sourceIp));
+
+        /* Destination IP */
+        sprintf(destinationIp, "%d.%d.%d.%d",
+                node[i].destinationIp[0],
+                node[i].destinationIp[1],
+                node[i].destinationIp[2],
+                node[i].destinationIp[3]);
+
+        printf("%s", destinationIp);
+        printSpaces(18 - strlen(destinationIp));
+
+        /* Source MAC */
+        printf("%s", node[i].sourceMac);
+        printSpaces(16 - strlen(node[i].sourceMac));
+
+        /* Destination MAC */
+        printf("%s", node[i].destinationMac);
+
+        printf("\n");
+    }
+
+    printf("========================================================================================================\n");
+}
+void readFile()
+{
+    FILE *fp;
+    char ch;
+    int i=0;
+
+    printf("\nEnter File Name : ");
+    scanf("%s",fileName);
+
+    fp=fopen(fileName,"r");
+
+    if(fp==NULL)
+    {
+        printf("\nFile Not Found\n");
+        return;
+    }
+
+    while((ch=fgetc(fp))!=EOF)
+    {
+        text[i]=ch;
+        i++;
+    }
+
+    text[i]='\0';
+
+    fclose(fp);
+
+    printf("\nFile Read Successfully");
+
+    printf("\n\nFile Name : %s\n",fileName);
+}
+
+
+
+void textToAscii()
+{
+    int i;
+
+    textLength=0;
+
+    for(i=0;text[i]!='\0';i++)
+    {
+        asciiValue[i]=text[i];
+        textLength++;
+    }
+}
+
+
+
+void asciiToBinary()
+{
+    int i,j;
+    int num;
+
+    for(i=0;i<textLength;i++)
+    {
+        num=asciiValue[i];
+
+        for(j=7;j>=0;j--)
+        {
+            if(num%2==0)
+            {
+                binaryValue[i][j]='0';
+            }
+            else
+            {
+                binaryValue[i][j]='1';
+            }
+
+            num=num/2;
+        }
+
+        binaryValue[i][8]='\0';
+    }
+}
+
+void generatePort()
+{
+    srand(time(NULL));
+
+    sourcePort=rand()%50000+1000;
+    destinationPort=rand()%50000+1000;
+
+    intToBinary16(sourcePort,sourcePortBinary);
+    intToBinary16(destinationPort,destinationPortBinary);
+}
+
+
+
+void searchUrl()
+{
+    int i;
+    int sourceFound=0;
+    int destinationFound=0;
+
+    printf("\nEnter Source URL : ");
+    scanf("%s",sourceUrl);
+
+    printf("\nEnter Destination URL : ");
+    scanf("%s",destinationUrl);
+
+    for(i=0;i<nodeCount;i++)
+    {
+        if(strcmp(sourceUrl,node[i].url)==0)
+        {
+            sourceIndex=i;
+            sourceFound=1;
+        }
+
+        if(strcmp(destinationUrl,node[i].url)==0)
+        {
+            destinationIndex=i;
+            destinationFound=1;
+        }
+    }
+
+    printf("\n");
+
+    if(sourceFound==1)
+    {
+        printf("Source URL Found");
+    }
+    else
+    {
+        printf("Source URL Not Found");
+    }
+
+    printf("\n");
+
+    if(destinationFound==1)
+    {
+        printf("Destination URL Found");
+    }
+    else
+    {
+        printf("Destination URL Not Found");
+    }
+
+    printf("\n");
+}
+
+
+
+void startLayers()
+{
+    readFile();
+
+    textToAscii();
+
+    asciiToBinary();
+
+    generatePort();
+
+    searchUrl();
+
+    segmentDivision();
+
+    packetDivision();
+
+    fragmentDivision();
+
+    frameDivision();
+
+    applicationLayer();
+
+    transportLayer();
+
+    networkLayer();
+
+    dataLinkLayer();
+
+    physicalLayer();
+}
+void segmentDivision()
+{
+    int i,j;
+
+    printf("\nEnter Segment Size : ");
+    scanf("%d",&segmentSize);
+
+    if(segmentSize<=0 || segmentSize>=200)
+    {
+        printf("\nInvalid Segment Size");
+        return;
+    }
+
+    totalSegment=0;
+
+    allBinary[0]='\0';
+
+    for(i=0;i<textLength;i++)
+    {
+        strcat(allBinary,binaryValue[i]);
+    }
+
+    binaryLength=strlen(allBinary);
+
+    i=0;
+
+    while(i<binaryLength)
+    {
+        j=0;
+
+        while(j<segmentSize && i<binaryLength)
+        {
+            segment[totalSegment][j]=allBinary[i];
+            j++;
+            i++;
+        }
+
+        while(j<segmentSize)
+        {
+            segment[totalSegment][j]='0';
+            j++;
+        }
+
+        segment[totalSegment][segmentSize]='\0';
+
+        totalSegment++;
+    }
+}
+
+
+
+void packetDivision()
+{
+    int i,j;
+
+    printf("\nEnter Packet Size : ");
+    scanf("%d",&packetSize);
+
+    if(packetSize<=0 || packetSize>=200)
+    {
+        printf("\nInvalid Packet Size");
+        return;
+    }
+
+    totalPacket=0;
+
+    allBinary[0]='\0';
+
+    for(i=0;i<totalSegment;i++)
+    {
+        strcat(allBinary,segment[i]);
+    }
+
+    binaryLength=strlen(allBinary);
+
+    i=0;
+
+    while(i<binaryLength)
+    {
+        j=0;
+
+        while(j<packetSize && i<binaryLength)
+        {
+            packet[totalPacket][j]=allBinary[i];
+            j++;
+            i++;
+        }
+
+        while(j<packetSize)
+        {
+            packet[totalPacket][j]='0';
+            j++;
+        }
+
+        packet[totalPacket][packetSize]='\0';
+
+        totalPacket++;
+    }
+}
+void fragmentDivision()
+{
+    int i,j,k;
+    int length;
+    int count;
+    int copyLength;
+    int len;
+
+    printf("\nEnter Fragment Size : ");
+    scanf("%d",&fragmentSize);
+
+    if(fragmentSize<=0 || fragmentSize>=100)
+    {
+        printf("\nInvalid Fragment Size");
+        return;
+    }
+
+    totalFragment=0;
+
+    for(i=0;i<totalPacket;i++)
+    {
+        length=strlen(packet[i]);
+
+        count=length/fragmentSize;
+
+        if(length%fragmentSize!=0)
+        {
+            count++;
+        }
+
+        k=0;
+
+        for(j=0;j<count;j++)
+        {
+            copyLength=fragmentSize;
+
+            if(k+fragmentSize>length)
+            {
+                copyLength=length-k;
+            }
+
+            strncpy(fragment[totalFragment],&packet[i][k],copyLength);
+
+            fragment[totalFragment][copyLength]='\0';
+
+            while(strlen(fragment[totalFragment])<fragmentSize)
+            {
+                len=strlen(fragment[totalFragment]);
+
+                fragment[totalFragment][len]='0';
+                fragment[totalFragment][len+1]='\0';
+            }
+
+            totalFragment++;
+
+            k=k+fragmentSize;
+        }
+    }
+}
+
+
+
+void frameDivision()
+{
+    int i;
+    int length;
+
+    printf("\nEnter Frame Size : ");
+    scanf("%d", &frameSize);
+
+    if(frameSize <= 0 || frameSize >= 100)
+    {
+        printf("\nInvalid Frame Size");
+        return;
+    }
+
+    if(frameSize < fragmentSize)
+    {
+        printf("\nFrame Size must be greater than or equal to Fragment Size");
+        return;
+    }
+
+    totalFrame = totalFragment;
+
+    for(i = 0; i < totalFrame; i++)
+    {
+        // முதலில் ஃபிராக்மென்ட் டேட்டாவை அப்படியே ஃபிரேமிற்குள் நகலெடுக்கிறோம்
+        strcpy(frame[i], fragment[i]);
+        
+        // தற்போதைய நீளத்தைக் கணக்கிடுகிறோம்
+        length = strlen(frame[i]);
+        
+        // ஆரம்பத்தில் பேடிங் பிட்கள் 0 என அமைப்போம்
+        paddingBits[i] = 0;
+
+        // நிபந்தனை: ஃபிரேம் சைஸ், ஃபிராக்மென்ட் சைஸை விட அதிகமாக இருந்தால் மட்டுமே பேடிங் பிட்கள் சேர்க்கப்படும்
+        if(frameSize > fragmentSize)
+        {
+            while(length < frameSize)
+            {
+                frame[i][length] = '0';
+                length++;
+                paddingBits[i]++;
+            }
+        }
+        
+        // ஸ்ட்ரிங்கின் முடிவை சரியாக லாக்கிங் செய்கிறோம்
+        frame[i][length] = '\0';
+    }
+}
+void decimalToBinary(int num)
+{
+    int i;
+    char binary[9];
+
+    for(i=7;i>=0;i--)
+    {
+        if(num%2==0)
+        {
+            binary[i]='0';
+        }
+        else
+        {
+            binary[i]='1';
+        }
+
+        num=num/2;
+    }
+
+    binary[8]='\0';
+
+    printf("%s",binary);
+}
+
+
+
+void intToBinary16(int num,char binary[])
+{
+    int i;
+
+    for(i=15;i>=0;i--)
+    {
+        if(num%2==0)
+        {
+            binary[i]='0';
+        }
+        else
+        {
+            binary[i]='1';
+        }
+
+        num=num/2;
+    }
+
+    binary[16]='\0';
+}
+
+
+
+void macToBinary(char mac[])
+{
+    int i;
+    int num;
+
+    for(i=0;mac[i]!='\0';i++)
+    {
+        if(mac[i]==':')
+        {
+            printf(":");
+        }
+        else
+        {
+            if(mac[i]>='0' && mac[i]<='9')
+            {
+                num=mac[i]-'0';
+            }
+            else if(mac[i]>='A' && mac[i]<='F')
+            {
+                num=mac[i]-'A'+10;
+            }
+            else if(mac[i]>='a' && mac[i]<='f')
+            {
+                num=mac[i]-'a'+10;
+            }
+
+            printf("%d",(num/8)%2);
+            printf("%d",(num/4)%2);
+            printf("%d",(num/2)%2);
+            printf("%d",num%2);
+        }
+    }
+}
+
+
+
+void sourceIpBinary()
+{
+    decimalToBinary(node[sourceIndex].sourceIp[0]);
+    printf(".");
+
+    decimalToBinary(node[sourceIndex].sourceIp[1]);
+    printf(".");
+
+    decimalToBinary(node[sourceIndex].sourceIp[2]);
+    printf(".");
+
+    decimalToBinary(node[sourceIndex].sourceIp[3]);
+}
+
+
+
+void destinationIpBinary()
+{
+    decimalToBinary(node[destinationIndex].destinationIp[0]);
+    printf(".");
+
+    decimalToBinary(node[destinationIndex].destinationIp[1]);
+    printf(".");
+
+    decimalToBinary(node[destinationIndex].destinationIp[2]);
+    printf(".");
+
+    decimalToBinary(node[destinationIndex].destinationIp[3]);
+}
+
+
+
+void destinationIpDecimal()
+{
+    printf("%d.%d.%d.%d",
+           node[destinationIndex].destinationIp[0],
+           node[destinationIndex].destinationIp[1],
+           node[destinationIndex].destinationIp[2],
+           node[destinationIndex].destinationIp[3]);
+}
+
+
+
+void sourceMacBinary()
+{
+    macToBinary(node[sourceIndex].sourceMac);
+}
+
+
+
+void destinationMacBinary()
+{
+    macToBinary(node[destinationIndex].destinationMac);
+}
+void printSpaces(int n)
+{
+    int i;
+
+    if(n < 0)
+        n = 0;
+
+    for(i = 0; i < n; i++)
+    {
+        printf(" ");
+    }
+}
+void applicationLayer()
+{
+    int i;
+
+    printf("\n");
+    printf("\n=================================================");
+    printf("\n              APPLICATION LAYER");
+    printf("\n=================================================");
+
+    printf("\nFile Name : %s",fileName);
+
+    printf("\n");
+    printf("\nOriginal Text");
+    printf("\n-------------");
+
+    printf("\n%s",text);
+
+    printf("\n");
+    printf("\nASCII Values");
+    printf("\n------------");
+
+    for(i=0;i<textLength;i++)
+    {
+        printf("%d ",asciiValue[i]);
+    }
+
+    printf("\n");
+    printf("\nBinary Values");
+    printf("\n-------------");
+
+    for(i=0;i<textLength;i++)
+    {
+        printf("%s ",binaryValue[i]);
+    }
+
+    printf("\n");
+}
+void transportLayer()
+{
+    int i;
+
+    printf("\n");
+    printf("\n=================================================");
+    printf("\n              TRANSPORT LAYER");
+    printf("\n=================================================");
+
+    printf("\nReceived From Application Layer");
+
+    printf("\n");
+    printf("\nBinary Data");
+   
+
+    for(i=0;i<textLength;i++)
+    {
+        printf("%s ",binaryValue[i]);
+    }
+
+    printf("\n");
+    printf("\nHeader");
+    
+    printf("\nSource Port      : %d",sourcePort);
+    printf("\nDestination Port : %d",destinationPort);
+
+    printf("\n");
+    printf("\nSource Port Binary      : %s",sourcePortBinary);
+    printf("\nDestination Port Binary : %s",destinationPortBinary);
+
+    printf("\n");
+    printf("\nSegments");
+    
+
+    for(i=0;i<totalSegment;i++)
+    {
+        printf("\nSegment %d : %s",i+1,segment[i]);
+    }
+
+    printf("\n");
+}
+
+void networkLayer()
+{
+    int i;
+    int fragmentNo = 1;
+    char sourceIp[20];
+    char destinationIp[20];
+
+    printf("\n");
+    printf("\n======================================================================");
+    printf("\n                        NETWORK LAYER");
+    printf("\n======================================================================");
+
+    printf("\n");
+    printf("\nHEADER");
+    printf("\n--------------------------------------------------");
+
+    
+
+    printf("\nDestination IP (Decimal) : ");
+    destinationIpDecimal();
+
+    printf("\n");
+
+    printf("\nSource IP (Binary)       : ");
+    sourceIpBinary();
+
+    printf("\nDestination IP (Binary)  : ");
+    destinationIpBinary();
+
+    printf("\n");
+
+    printf("\nIP Header Added Successfully");
+
+
+    sprintf(sourceIp,"%d.%d.%d.%d",
+            node[sourceIndex].sourceIp[0],
+            node[sourceIndex].sourceIp[1],
+            node[sourceIndex].sourceIp[2],
+            node[sourceIndex].sourceIp[3]);
+
+
+    sprintf(destinationIp,"%d.%d.%d.%d",
+            node[destinationIndex].destinationIp[0],
+            node[destinationIndex].destinationIp[1],
+            node[destinationIndex].destinationIp[2],
+            node[destinationIndex].destinationIp[3]);
+
+
+    printf("\n");
+
+    printf("\n+--------+--------------------+--------------------+----------------------------------+");
+    printf("\n| Packet | Source IP          | Destination IP     | Packet Binary Data               |");
+    printf("\n+--------+--------------------+--------------------+----------------------------------+");
+
+
+    for(i=0;i<totalPacket;i++)
+    {
+        printf("\n| ");
+
+        printf("%d",i+1);
+        printSpaces(6);
+
+        printf("| ");
+
+        printf("%s",sourceIp);
+        printSpaces(19-strlen(sourceIp));
+
+        printf("| ");
+
+        printf("%s",destinationIp);
+        printSpaces(19-strlen(destinationIp));
+
+        printf("| ");
+
+        printf("%s",packet[i]);
+        printSpaces(33-strlen(packet[i]));
+
+        printf("|");
+    }
+
+
+    printf("\n+--------+--------------------+--------------------+----------------------------------+");
+
+
+    /* Combined Packet Stream */
+
+    printf("\n\nCombined Packet Stream");
+
+    for(i=0;i<totalPacket;i++)
+    {
+        printf("\nPacket %d : %s",i+1,packet[i]);
+    }
+
+
+
+    /* Fragmentation */
+
+    printf("\n\nFragmentation");
+    printf("\n--------------------------------------------------");
+
+
+    fragmentNo = 1;
+
+
+    for(i=0;i<totalPacket;i++)
+    {
+        int len;
+        int j;
+
+        len = strlen(packet[i]);
+
+
+        printf("\n\nPacket %d Fragments",i+1);
+
+
+        for(j=0;j<len;j+=fragmentSize)
+        {
+
+            printf("\nFragment %d : ",fragmentNo);
+
+
+            int k;
+
+
+            for(k=j;k<j+fragmentSize && k<len;k++)
+            {
+                printf("%c",packet[i][k]);
+            }
+
+
+            fragmentNo++;
+
+        }
+    }
+
+
+    printf("\n");
+}
+void dataLinkLayer()
+{
+    int i;
+
+    printf("\n");
+    printf("\n========================================================================================================================");
+    printf("\n                                         DATA LINK LAYER");
+    printf("\n========================================================================================================================");
+
+
+    printf("\nDATA LINK HEADER");
+    printf("\n----------------");
+
+
+    printf("\nSource MAC Address      : %s", node[sourceIndex].sourceMac);
+
+    printf("\nSource MAC Binary       : ");
+    sourceMacBinary();
+
+
+    printf("\n");
+
+    printf("\nDestination MAC Address : %s", node[destinationIndex].destinationMac);
+
+    printf("\nDestination MAC Binary  : ");
+    destinationMacBinary();
+
+
+    printf("\n");
+
+
+    printf("\n+-------+------------------+------------------+--------------------------+--------------+---------------+");
+    printf("\n| Frame | Source MAC       | Destination MAC  | Payload Data             | Padding Bits | Error Control |");
+    printf("\n+-------+------------------+------------------+--------------------------+--------------+---------------+");
+
+
+    for(i = 0; i < totalFrame; i++)
+    {
+        printf("\n| ");
+
+        // Frame Number
+        printf("%d", i + 1);
+        printSpaces(5);
+
+
+        printf("| ");
+
+
+        // Source MAC
+        printf("%s", node[sourceIndex].sourceMac);
+        printSpaces(17 - strlen(node[sourceIndex].sourceMac));
+
+
+        printf("| ");
+
+
+        // Destination MAC
+        printf("%s", node[destinationIndex].destinationMac);
+        printSpaces(17 - strlen(node[destinationIndex].destinationMac));
+
+
+        printf("| ");
+
+
+        // Payload + Padding already added in frame[]
+        printf("%s", frame[i]);
+        printSpaces(25 - strlen(frame[i]));
+
+
+        printf("| ");
+
+
+        // Padding Bits
+        printf("%d", paddingBits[i]);
+        printSpaces(12);
+
+
+        printf("| ");
+
+
+        // Error Control
+        printf("00000000");
+        printSpaces(7);
+
+
+        printf("|");
+    }
+
+
+    printf("\n+-------+------------------+------------------+--------------------------+--------------+---------------+");
+
+
+    printf("\n");
+}
+void physicalLayer()
+{
+    char sourceIp[20];
+    char destinationIp[20];
+
+    printf("\n");
+    printf("\n======================================================================");
+    printf("\n                         PHYSICAL LAYER");
+    printf("\n======================================================================");
+
+    sprintf(sourceIp,"%d.%d.%d.%d",
+            node[sourceIndex].sourceIp[0],
+            node[sourceIndex].sourceIp[1],
+            node[sourceIndex].sourceIp[2],
+            node[sourceIndex].sourceIp[3]);
+
+    sprintf(destinationIp,"%d.%d.%d.%d",
+            node[destinationIndex].destinationIp[0],
+            node[destinationIndex].destinationIp[1],
+            node[destinationIndex].destinationIp[2],
+            node[destinationIndex].destinationIp[3]);
+
+    printf("\n+----------------------+--------------------------------------+");
+    printf("\n| Parameter            | Value                                |");
+    printf("\n+----------------------+--------------------------------------+");
+
+    printf("\n| Source MAC           | ");
+    printf("%s", node[sourceIndex].sourceMac);
+    printSpaces(36 - strlen(node[sourceIndex].sourceMac));
+    printf("|");
+
+    printf("\n| Destination MAC      | ");
+    printf("%s", node[destinationIndex].destinationMac);
+    printSpaces(36 - strlen(node[destinationIndex].destinationMac));
+    printf("|");
+
+    printf("\n| Source IP            | ");
+    printf("%s", sourceIp);
+    printSpaces(36 - strlen(sourceIp));
+    printf("|");
+
+    printf("\n| Destination IP       | ");
+    printf("%s", destinationIp);
+    printSpaces(36 - strlen(destinationIp));
+    printf("|");
+
+    printf("\n| Total Frames         | ");
+
+    printf("%d", totalFrame);
+
+    if(totalFrame < 10)
+        printSpaces(35);
+    else if(totalFrame < 100)
+        printSpaces(34);
+    else
+        printSpaces(33);
+
+    printf("|");
+
+    printf("\n| Error Status         | ");
+    printf("No Error Detected");
+    printSpaces(19);
+    printf("|");
+
+    printf("\n+----------------------+--------------------------------------+");
+
+    printf("\n");
+    printf("\nTransmission Completed Successfully");
+    printf("\n");
+}
