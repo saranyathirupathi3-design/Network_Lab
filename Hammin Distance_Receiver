@@ -1,0 +1,240 @@
+#include <stdio.h>
+
+int received[20];
+
+int n = 11;
+
+int errorPosition = 0;
+
+int syndrome = 0;
+void receive()
+{
+    int i;
+    FILE *fp;
+
+    printf("========================================\n");
+    printf("          HAMMING CODE - RECEIVER\n");
+    printf("========================================\n");
+
+    fp = fopen("channel.txt", "r");
+
+    if(fp == NULL)
+    {
+        printf("File not found\n");
+        return;
+    }
+
+    printf("\nReceiving Data From Channel...\n");
+
+    for(i = 1; i <= n; i++)
+    {
+        fscanf(fp, "%1d", &received[i]);
+    }
+
+    fclose(fp);
+
+    printf("\nReceived Code = ");
+
+    for(i = 1; i <= n; i++)
+    {
+        printf("%d", received[i]);
+    }
+}
+void introduceError()
+{
+    int choice;
+    int position;
+    int i;
+
+    printf("\n\nDo you want to introduce error? (1.Yes / 0.No): ");
+    scanf("%d", &choice);
+
+    if(choice == 1)
+    {
+        printf("\nEnter Bit Position to Change (1-%d): ", n);
+        scanf("%d", &position);
+
+        if(position < 1 || position > n)
+        {
+            printf("\nInvalid Position\n");
+            return;
+        }
+
+        printf("\nBefore Error Introduction = ");
+
+        for(i = 1; i <= n; i++)
+        {
+            printf("%d", received[i]);
+        }
+
+        /* Flip the selected bit */
+        if(received[position] == 0)
+            received[position] = 1;
+        else
+            received[position] = 0;
+
+        printf("\n\nError Introduced at Position %d\n", position);
+
+        printf("After Error Introduction = ");
+
+        for(i = 1; i <= n; i++)
+        {
+            printf("%d", received[i]);
+        }
+    }
+    else
+    {
+        printf("\nNo Error Introduced\n");
+    }
+}
+void check()
+{
+    int p, i, count;
+
+    errorPosition = 0;
+    syndrome = 0;
+
+    printf("\n\n\nSTEP 1 : Error Detection");
+    printf("\n-------------------------\n");
+
+    for(p = 1; p <= 8; p = p * 2)
+    {
+        count = 0;
+
+        printf("\nChecking P%d\n", p);
+
+        printf("\nPositions Covered : ");
+
+        for(i = 1; i <= n; i++)
+        {
+            if(i & p)
+                printf("%d ", i);
+        }
+
+        printf("\nValues : ");
+
+        for(i = 1; i <= n; i++)
+        {
+            if(i & p)
+                printf("%d ", received[i]);
+        }
+
+        for(i = 1; i <= n; i++)
+        {
+            if((i & p) && received[i] == 1)
+                count++;
+        }
+
+        printf("\nNumber of 1's = %d\n", count);
+
+        if(count % 2 == 0)
+        {
+            printf("P%d : OK\n", p);
+        }
+        else
+        {
+            printf("P%d : ERROR\n", p);
+
+            errorPosition = errorPosition + p;
+            syndrome = syndrome + p;
+        }
+    }
+
+    printf("\n-------------------------");
+    printf("\nSyndrome");
+    printf("\n-------------------------");
+
+    printf("\nBinary Syndrome = ");
+
+    for(i = 8; i >= 1; i = i / 2)
+    {
+        if(syndrome & i)
+            printf("1");
+        else
+            printf("0");
+    }
+
+    printf("\nDecimal Syndrome = %d\n", syndrome);
+}
+void correction()
+{
+    int i;
+
+    printf("\n\nError Position Calculation");
+    printf("\n--------------------------\n");
+
+    if(errorPosition == 0)
+    {
+        printf("No Error Detected\n");
+    }
+    else if(errorPosition > n)
+    {
+        printf("Invalid Error Position = %d\n", errorPosition);
+        printf("Multiple Bit Error may be present\n");
+    }
+    else
+    {
+        printf("Syndrome (Decimal) = %d\n", syndrome);
+
+        printf("Error Position = %d\n", errorPosition);
+
+        printf("\nSTEP 2 : Error Correction");
+        printf("\n-------------------------\n");
+
+        printf("\nWrong Bit Position : %d\n", errorPosition);
+
+        printf("Reason : Bit value changed during transmission\n");
+
+        /* Correct the error */
+        if(received[errorPosition] == 0)
+            received[errorPosition] = 1;
+        else
+            received[errorPosition] = 0;
+
+        printf("\nCorrected Code = ");
+
+        for(i = 1; i <= n; i++)
+        {
+            printf("%d", received[i]);
+        }
+
+        printf("\n");
+    }
+}
+void distance()
+{
+    printf("\n\n\nSTEP 3 : Hamming Distance");
+    printf("\n-------------------------\n");
+
+    if(errorPosition == 0)
+    {
+        printf("Different Positions : None\n");
+        printf("Hamming Distance = 0\n");
+    }
+    else if(errorPosition <= n)
+    {
+        printf("Different Position : %d\n", errorPosition);
+        printf("Hamming Distance = 1\n");
+    }
+    else
+    {
+        printf("Multiple Bit Error\n");
+        printf("Hamming Distance not calculated\n");
+    }
+
+    printf("\nTransmission Completed\n");
+}
+int main()
+{
+    receive();
+
+    introduceError();
+
+    check();
+
+    correction();
+
+    distance();
+
+    return 0;
+}
