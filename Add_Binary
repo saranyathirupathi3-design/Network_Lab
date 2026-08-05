@@ -1,0 +1,70 @@
+#include <string.h>
+#include <stdlib.h>
+
+char* addBinary(char* a, char* b) {
+    // 1. Find where the strings end (rightmost digit)
+    int i = strlen(a) - 1; 
+    int j = strlen(b) - 1; 
+    
+    // 2. Setup a temporary array to store our answer backward
+    // The constraints say the strings can be up to 10,000 characters long.
+    // So we make an array large enough to hold the answer.
+    static char temp_result[10005];
+    int k = 0; // Tracks where we are writing in temp_result
+    
+    int carry = 0; // Tracks our carry-over bit (can be 0 or 1)
+    
+    // 3. Loop from right to left
+    // Keep going as long as there are digits left in 'a' OR 'b', OR if there is a leftover carry
+    while (i >= 0 || j >= 0 || carry == 1) {
+        int sum = carry; // Start the column sum with whatever was carried over
+        
+        // Add the digit from string 'a' if we haven't run out of characters
+        if (i >= 0) {
+            sum = sum + (a[i] - '0'); // (a[i] - '0') converts character '1' or '0' to number 1 or 0
+            i--;                     // Move left to the next digit
+        }
+        
+        // Add the digit from string 'b' if we haven't run out of characters
+        if (j >= 0) {
+            sum = sum + (b[j] - '0'); // Converts character to number
+            j--;                     // Move left to the next digit
+        }
+        
+        // 4. Decide what to write down based on the total column sum
+        if (sum == 0) {
+            temp_result[k] = '0';
+            carry = 0;
+        } 
+        else if (sum == 1) {
+            temp_result[k] = '1';
+            carry = 0;
+        } 
+        else if (sum == 2) {
+            temp_result[k] = '0';
+            carry = 1; // Binary 1 + 1 is 10 (write 0, carry 1)
+        } 
+        else if (sum == 3) {
+            temp_result[k] = '1';
+            carry = 1; // Binary 1 + 1 + 1 is 11 (write 1, carry 1)
+        }
+        
+        k++; // Move to the next slot in our temporary result array
+    }
+    
+    // 5. Flip the answer right-side up
+    // Because we added from right to left, temp_result is currently backward.
+    // We allocate memory for the final string that LeetCode wants.
+    char* final_answer = (char*)malloc((k + 1) * sizeof(char));
+    
+    int target = 0;
+    // Read temp_result from the end to the beginning, and copy it to final_answer
+    for (int index = k - 1; index >= 0; index--) {
+        final_answer[target] = temp_result[index];
+        target++;
+    }
+    
+    final_answer[target] = '\0'; // The standard C marker that says "this string ends here"
+    
+    return final_answer;
+}
