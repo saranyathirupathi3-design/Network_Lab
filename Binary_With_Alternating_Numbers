@@ -1,0 +1,28 @@
+#include <stdbool.h>
+
+bool hasAlternatingBits(int n) {
+   
+    int last_bit = n % 2;
+    
+    // 2. Shrink the number by dropping the last bit we just checked
+    n = n / 2;
+    
+    // 3. Keep checking the remaining bits one by one
+    while (n > 0) {
+        int current_bit = n % 2; // Get the new last bit
+        
+        // If the current bit is the SAME as the last bit we saw, it's NOT alternating!
+        if (current_bit == last_bit) {
+            return false; 
+        }
+        
+        // Update 'last_bit' to be our 'current_bit' for the next round of comparison
+        last_bit = current_bit;
+        
+        // Shrink the number again to move to the next bit
+        n = n / 2;
+    }
+    
+    // If the loop finishes without finding any matching adjacent bits, it's true!
+    return true;
+}
