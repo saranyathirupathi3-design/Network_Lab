@@ -1,0 +1,80 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+// This is a basic helper function to sort numbers from smallest to largest
+int compare_numbers(const void *a, const void *b) {
+    return (*(int*)a - *(int*)b);
+}
+
+int subarrayBitwiseORs(int* arr, int arrSize) {
+    // 1. Create small tracking lists that will never hold more than 32 items
+    int current_results[32];
+    int current_count = 0;
+    
+    int next_results[32];
+    int next_count = 0;
+
+    // 2. Create a large list to hold every single answer we find
+    // Since each step adds at most 30 items, 30 * arrSize is plenty of space
+    int* all_answers = (int*)malloc(30 * arrSize * sizeof(int));
+    int total_answers = 0;
+
+    // 3. Loop through every number in our main input array
+    for (int i = 0; i < arrSize; i++) {
+        int current_num = arr[i];
+        next_count = 0;
+
+        // Start a new subarray with just the current number itself
+        next_results[next_count] = current_num;
+        next_count++;
+
+        // Combine the current number with all the valid OR answers from the previous step
+        for (int j = 0; j < current_count; j++) {
+            int new_or_value = current_results[j] | current_num;
+
+            // Check if we already found this exact number in this step
+            int already_exists = 0;
+            for (int k = 0; k < next_count; k++) {
+                if (next_results[k] == new_or_value) {
+                    already_exists = 1;
+                    break;
+                }
+            }
+
+            // If it's a brand new number, add it to our list
+            if (already_exists == 0) {
+                next_results[next_count] = new_or_value;
+                next_count++;
+            }
+        }
+
+        // Save our new step results into our master list and update current_results
+        current_count = next_count;
+        for (int j = 0; j < current_count; j++) {
+            current_results[j] = next_results[j];
+            
+            all_answers[total_answers] = current_results[j];
+            total_answers++;
+        }
+    }
+
+    // 4. Sort the master list so all duplicate numbers sit right next to each other
+    qsort(all_answers, total_answers, sizeof(int), compare_numbers);
+
+    // 5. Count how many unique numbers are in our sorted master list
+    int unique_count = 0;
+    if (total_answers > 0) {
+        unique_count = 1; // Count the very first item
+        for (int i = 1; i < total_answers; i++) {
+            // If the current number is different from the previous one, it's unique!
+            if (all_answers[i] != all_answers[i - 1]) {
+                unique_count++;
+            }
+        }
+    }
+
+    // Clean up the memory we borrowed for all_answers
+    free(all_answers);
+
+    return unique_count;
+}
