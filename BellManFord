@@ -1,0 +1,425 @@
+#include<stdio.h>
+#include<stdlib.h>
+
+#define MAX 10
+#define INF 999
+
+//==========================
+// Edge Node (Linked List)
+//==========================
+
+struct Edge
+{
+    int destination;
+    int cost;
+    struct Edge *next;
+};
+
+//==========================
+// Router Node (Graph Vertex)
+//==========================
+
+struct Router
+{
+    char name;
+    struct Edge *head;
+};
+
+//==========================
+// Global Variables
+//==========================
+
+struct Router router[MAX];
+
+int costMatrix[MAX][MAX];
+
+int distance[MAX];
+
+int parent[MAX];
+
+int n;
+
+// Function Prototypes
+
+void addEdge(int source,int destination,int cost);
+void createGraph();
+void displayCostMatrix();
+void displayAdjacencyList();
+void bellmanFord(int source);
+void printPath(int parent[],int current);
+void displayRoutingTable(int source,int distance[],int parent[]);
+
+void addEdge(int source,int destination,int cost)
+{
+    struct Edge *newEdge;
+
+    newEdge=(struct Edge*)malloc(sizeof(struct Edge));
+
+    newEdge->destination=destination;
+    newEdge->cost=cost;
+
+    newEdge->next=router[source].head;
+
+    router[source].head=newEdge;
+}
+
+void displayCostMatrix()
+{
+    int i,j;
+
+    printf("\n========================================");
+    printf("\n           COST MATRIX");
+    printf("\n========================================\n\n");
+
+    printf("\t");
+
+    for(i=0;i<n;i++)
+    {
+        printf("%c\t",router[i].name);
+    }
+
+    printf("\n");
+
+    for(i=0;i<n;i++)
+    {
+        printf("%c\t",router[i].name);
+
+        for(j=0;j<n;j++)
+        {
+            if(costMatrix[i][j]==INF)
+            {
+                printf("INF\t");
+            }
+            else
+            {
+                printf("%d\t",costMatrix[i][j]);
+            }
+        }
+
+        printf("\n");
+    }
+}
+
+void displayAdjacencyList()
+{
+    int i;
+
+    printf("\n\n========================================");
+    printf("\n         ADJACENCY LIST");
+    printf("\n========================================\n");
+
+    for(i=0;i<n;i++)
+    {
+        struct Edge *temp;
+
+        printf("\n%c --> ",router[i].name);
+
+        temp=router[i].head;
+
+        if(temp==NULL)
+        {
+            printf("NULL");
+        }
+
+        while(temp!=NULL)
+        {
+            printf("%c(%d)",
+            router[temp->destination].name,
+            temp->cost);
+
+            if(temp->next!=NULL)
+            {
+                printf(" -> ");
+            }
+
+            temp=temp->next;
+        }
+    }
+
+    printf("\n");
+}
+
+void createGraph()
+{
+    int i,j;
+    int cost;
+
+    printf("\nEnter Number of Routers : ");
+    scanf("%d",&n);
+
+    printf("\nEnter Router Names\n");
+
+    for(i=0;i<n;i++)
+    {
+        printf("Router %d : ",i);
+
+        scanf(" %c",&router[i].name);
+
+        router[i].head=NULL;
+    }
+
+    printf("\nEnter Cost Matrix\n");
+
+    printf("\n(Enter 999 if there is no direct connection)\n\n");
+
+    for(i=0;i<n;i++)
+    {
+        for(j=0;j<n;j++)
+        {
+            printf("Cost from %c to %c : ",
+            router[i].name,
+            router[j].name);
+
+            scanf("%d",&cost);
+
+            costMatrix[i][j]=cost;
+
+            if(i!=j && cost!=INF)
+            {
+                addEdge(i,j,cost);
+            }
+        }
+    }
+
+    displayCostMatrix();
+
+    displayAdjacencyList();
+}
+
+void bellmanFord(int source)
+{
+    int i, j;
+    int negativeCycle = 0;
+
+    //=========================
+    // Initialize Distance
+    //=========================
+
+    for(i = 0; i < n; i++)
+    {
+        distance[i] = INF;
+        parent[i] = -1;
+    }
+
+    distance[source] = 0;
+
+    printf("\n==========================================");
+    printf("\nSOURCE ROUTER : %c", router[source].name);
+    printf("\n==========================================");
+
+    printf("\n\nInitial Distance Table\n");
+
+    printf("-------------------------------------\n");
+
+    printf("Router\tDistance\n");
+
+    for(i = 0; i < n; i++)
+    {
+        if(distance[i] == INF)
+            printf("%c\tINF\n", router[i].name);
+        else
+            printf("%c\t%d\n", router[i].name, distance[i]);
+    }
+
+    //=========================
+    // Bellman Ford Iterations
+    //=========================
+
+    for(i = 1; i <= n - 1; i++)
+    {
+        printf("\n\n==========================================");
+        printf("\nIteration %d", i);
+        printf("\n==========================================\n");
+
+        int updated = 0;
+
+        for(j = 0; j < n; j++)
+        {
+            struct Edge *temp = router[j].head;
+
+            while(temp != NULL)
+            {
+                int destination = temp->destination;
+                int cost = temp->cost;
+
+                if(distance[j] != INF &&
+                   distance[j] + cost < distance[destination])
+                {
+                    printf("\nRelaxing Edge : %c --> %c",
+                           router[j].name,
+                           router[destination].name);
+
+                    printf("\nOld Distance : ");
+
+                    if(distance[destination] == INF)
+                        printf("INF");
+                    else
+                        printf("%d", distance[destination]);
+
+                    printf("\nNew Distance : %d",
+                           distance[j] + cost);
+
+                    distance[destination] =
+                    distance[j] + cost;
+
+                    parent[destination] = j;
+
+                    updated = 1;
+
+                    printf("\nDistance Updated Successfully\n\n");
+                }
+
+                temp = temp->next;
+            }
+        }
+
+        if(updated == 0)
+        {
+            printf("\nNo Relaxation Performed.\n");
+        }
+
+        //=========================
+        // Distance Table
+        //=========================
+
+        printf("\nDistance Table After Iteration %d\n", i);
+
+        printf("-------------------------------------\n");
+
+        printf("Router\tDistance\n");
+
+        for(j = 0; j < n; j++)
+        {
+            if(distance[j] == INF)
+                printf("%c\tINF\n", router[j].name);
+            else
+                printf("%c\t%d\n",
+                       router[j].name,
+                       distance[j]);
+        }
+    }
+
+    //==================================
+    // Negative Cycle Checking
+    //==================================
+
+    printf("\n\n==========================================");
+    printf("\nNEGATIVE CYCLE CHECK");
+    printf("\n==========================================\n");
+
+    for(i = 0; i < n; i++)
+    {
+        struct Edge *temp = router[i].head;
+
+        while(temp != NULL)
+        {
+            if(distance[i] != INF &&
+               distance[i] + temp->cost <
+               distance[temp->destination])
+            {
+                negativeCycle = 1;
+
+                printf("\nEdge %c --> %c still reduces distance",
+                       router[i].name,
+                       router[temp->destination].name);
+            }
+
+            temp = temp->next;
+        }
+    }
+
+    if(negativeCycle)
+    {
+        printf("\n\nNegative Weight Cycle Found.\n");
+
+        return;
+    }
+    else
+    {
+        printf("\n\nNo Negative Weight Cycle.\n");
+    }
+
+    // Routing Table will be added in Part 3
+	printf("\n");
+displayRoutingTable(source, distance, parent);
+}
+
+void printPath(int parent[], int current)
+{
+    if(parent[current] == -1)
+    {
+        printf("%c", router[current].name);
+        return;
+    }
+
+    printPath(parent, parent[current]);
+
+    printf(" -> %c", router[current].name);
+}
+
+void displayRoutingTable(int source,
+                         int distance[],
+                         int parent[])
+{
+    int i;
+    int nextHop;
+
+    printf("\n==============================================");
+    printf("\nROUTING TABLE OF ROUTER %c", router[source].name);
+    printf("\n==============================================");
+
+    printf("\nDestination\tCost\tNext Hop\tPath\n");
+    printf("---------------------------------------------------------------\n");
+
+    for(i=0;i<n;i++)
+    {
+        if(i==source)
+            continue;
+
+        printf("%c\t\t",
+               router[i].name);
+
+        if(distance[i]==INF)
+        {
+            printf("INF\t-\t\t-\n");
+        }
+        else
+        {
+            nextHop=i;
+
+            while(parent[nextHop]!=source &&
+                  parent[nextHop]!=-1)
+            {
+                nextHop=parent[nextHop];
+            }
+
+            printf("%d\t",
+                   distance[i]);
+
+            printf("%c\t\t",
+                   router[nextHop].name);
+
+            printPath(parent,i);
+
+            printf("\n");
+        }
+    }
+}
+
+int main()
+{
+    int source;
+
+    printf("=========================================");
+    printf("\n BELLMAN FORD ROUTING ALGORITHM");
+    printf("\n=========================================");
+
+    createGraph();
+
+    for(source=0; source<n; source++)
+    {
+        bellmanFord(source);
+    }
+
+    return 0;
+}
