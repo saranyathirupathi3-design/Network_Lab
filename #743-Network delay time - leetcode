@@ -1,0 +1,100 @@
+#include <stdlib.h>
+#include <limits.h>
+
+int networkDelayTime(int** times, int timesSize, int* timesColSize,
+                     int n, int k) {
+
+    int INF = 1000000000;
+
+    // Create adjacency matrix
+    int** graph = (int**)malloc((n + 1) * sizeof(int*));
+
+    for (int i = 0; i <= n; i++) {
+        graph[i] = (int*)malloc((n + 1) * sizeof(int));
+
+        for (int j = 0; j <= n; j++) {
+            graph[i][j] = INF;
+        }
+    }
+
+    // Store directed edges
+    for (int i = 0; i < timesSize; i++) {
+        int u = times[i][0];
+        int v = times[i][1];
+        int w = times[i][2];
+
+        graph[u][v] = w;
+    }
+
+    // Distance from k
+    int* dist = (int*)malloc((n + 1) * sizeof(int));
+    int* visited = (int*)calloc(n + 1, sizeof(int));
+
+    for (int i = 1; i <= n; i++) {
+        dist[i] = INF;
+    }
+
+    dist[k] = 0;
+
+    // Dijkstra
+    for (int count = 1; count <= n; count++) {
+
+        int current = -1;
+        int minDistance = INF;
+
+        // Find nearest unvisited node
+        for (int i = 1; i <= n; i++) {
+            if (!visited[i] && dist[i] < minDistance) {
+                minDistance = dist[i];
+                current = i;
+            }
+        }
+
+        // No more reachable nodes
+        if (current == -1)
+            break;
+
+        visited[current] = 1;
+
+        // Relax neighbours
+        for (int v = 1; v <= n; v++) {
+
+            if (!visited[v] &&
+                graph[current][v] != INF) {
+
+                int newDistance =
+                    dist[current] + graph[current][v];
+
+                if (newDistance < dist[v]) {
+                    dist[v] = newDistance;
+                }
+            }
+        }
+    }
+
+    // Find maximum shortest distance
+    int answer = 0;
+
+    for (int i = 1; i <= n; i++) {
+
+        if (dist[i] == INF) {
+            answer = -1;
+            break;
+        }
+
+        if (dist[i] > answer) {
+            answer = dist[i];
+        }
+    }
+
+    // Free memory
+    for (int i = 0; i <= n; i++) {
+        free(graph[i]);
+    }
+
+    free(graph);
+    free(dist);
+    free(visited);
+
+    return answer;
+}
