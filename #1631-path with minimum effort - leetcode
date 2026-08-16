@@ -1,0 +1,107 @@
+#include <stdlib.h>
+
+int minimumEffortPath(int** heights, int heightsSize, int* heightsColSize) {
+
+    int rows = heightsSize;
+    int cols = heightsColSize[0];
+
+    int total = rows * cols;
+    int INF = 1000000000;
+
+    int* effort = (int*)malloc(total * sizeof(int));
+    int* visited = (int*)calloc(total, sizeof(int));
+
+    // Initialize effort
+    for (int i = 0; i < total; i++) {
+        effort[i] = INF;
+    }
+
+    // Starting cell
+    effort[0] = 0;
+
+    // Dijkstra's algorithm
+    for (int count = 0; count < total; count++) {
+
+        int current = -1;
+        int minEffort = INF;
+
+        // Find unvisited cell with minimum effort
+        for (int i = 0; i < total; i++) {
+
+            if (!visited[i] && effort[i] < minEffort) {
+                minEffort = effort[i];
+                current = i;
+            }
+        }
+
+        if (current == -1)
+            break;
+
+        visited[current] = 1;
+
+        // Convert 1D index to row and column
+        int r = current / cols;
+        int c = current % cols;
+
+        // If destination is reached
+        if (r == rows - 1 && c == cols - 1) {
+            int answer = effort[current];
+
+            free(effort);
+            free(visited);
+
+            return answer;
+        }
+
+        // Four possible directions
+        int dr[4] = {-1, 1, 0, 0};
+        int dc[4] = {0, 0, -1, 1};
+
+        for (int d = 0; d < 4; d++) {
+
+            int nr = r + dr[d];
+            int nc = c + dc[d];
+
+            // Check boundaries
+            if (nr < 0 || nr >= rows ||
+                nc < 0 || nc >= cols) {
+                continue;
+            }
+
+            int next = nr * cols + nc;
+
+            if (visited[next])
+                continue;
+
+            // Difference between current and next cell
+            int diff = abs(heights[r][c] -
+                           heights[nr][nc]);
+
+            /*
+                The effort of the new path is the
+                maximum of:
+
+                current path effort
+                and current edge difference
+            */
+            int newEffort;
+
+            if (effort[current] > diff)
+                newEffort = effort[current];
+            else
+                newEffort = diff;
+
+            // Relax
+            if (newEffort < effort[next]) {
+                effort[next] = newEffort;
+            }
+        }
+    }
+
+    int answer = effort[total - 1];
+
+    free(effort);
+    free(visited);
+
+    return answer;
+}
