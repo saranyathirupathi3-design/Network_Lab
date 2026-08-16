@@ -1,0 +1,159 @@
+#include <stdlib.h>
+#include <stdbool.h>
+
+#define HASH_SIZE 200003
+
+typedef struct Node {
+    int value;
+    int bus;
+    struct Node* next;
+} Node;
+
+int hash(int x) {
+    return (x % HASH_SIZE + HASH_SIZE) % HASH_SIZE;
+}
+
+bool contains(Node** table, int value) {
+    int h = hash(value);
+
+    Node* p = table[h];
+
+    while (p != NULL) {
+        if (p->value == value)
+            return true;
+
+        p = p->next;
+    }
+
+    return false;
+}
+
+void insert(Node** table, int value, int bus) {
+    int h = hash(value);
+
+    Node* node = (Node*)malloc(sizeof(Node));
+
+    node->value = value;
+    node->bus = bus;
+    node->next = table[h];
+
+    table[h] = node;
+}
+
+int numBusesToDestination(int** routes, int routesSize,
+                          int* routesColSize,
+                          int source, int target) {
+
+    if (source == target)
+        return 0;
+
+    /*
+        stop -> buses
+    */
+    Node** stopToBus =
+        (Node**)calloc(HASH_SIZE, sizeof(Node*));
+
+    for (int bus = 0; bus < routesSize; bus++) {
+
+        for (int j = 0;
+             j < routesColSize[bus];
+             j++) {
+
+            insert(stopToBus,
+                   routes[bus][j],
+                   bus);
+        }
+    }
+
+    bool* visitedBus =
+        (bool*)calloc(routesSize, sizeof(bool));
+
+    /*
+        visited stops
+    */
+    Node** visited =
+        (Node**)calloc(HASH_SIZE, sizeof(Node*));
+
+    /*
+        Queue of stops
+    */
+    int totalStops = 0;
+
+    for (int i = 0; i < routesSize; i++)
+        totalStops += routesColSize[i];
+
+    int* queue =
+        (int*)malloc((totalStops + 1) * sizeof(int));
+
+    int front = 0;
+    int rear = 0;
+
+    queue[rear++] = source;
+
+    insert(visited, source, -1);
+
+    int buses = 0;
+
+    while (front < rear) {
+
+        int size = rear - front;
+
+        buses++;
+
+        while (size--) {
+
+            int stop = queue[front++];
+
+            int h = hash(stop);
+
+            Node* p = stopToBus[h];
+
+            while (p != NULL) {
+
+                if (p->value == stop) {
+
+                    int bus = p->bus;
+
+                    if (!visitedBus[bus]) {
+
+                        visitedBus[bus] = true;
+
+                        for (int j = 0;
+                             j < routesColSize[bus];
+                             j++) {
+
+                            int next =
+                                routes[bus][j];
+
+                            if (next == target) {
+
+                                free(visitedBus);
+                                free(queue);
+
+                                return buses;
+                            }
+
+                            if (!contains(visited,
+                                          next)) {
+
+                                insert(visited,
+                                       next,
+                                       -1);
+
+                                queue[rear++] =
+                                    next;
+                            }
+                        }
+                    }
+                }
+
+                p = p->next;
+            }
+        }
+    }
+
+    free(visitedBus);
+    free(queue);
+
+    return -1;
+}
