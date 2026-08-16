@@ -1,0 +1,118 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define INF 1000000000
+
+int main() {
+    int t;
+    scanf("%d", &t);
+
+    while (t--) {
+        int n, m;
+        scanf("%d %d", &n, &m);
+
+        int **adj = (int **)malloc((n + 1) * sizeof(int *));
+
+        for (int i = 0; i <= n; i++) {
+            adj[i] = (int *)malloc((n + 1) * sizeof(int));
+
+            for (int j = 0; j <= n; j++) {
+                adj[i][j] = INF;
+            }
+        }
+
+        // Read edges
+        for (int i = 0; i < m; i++) {
+            int u, v, w;
+            scanf("%d %d %d", &u, &v, &w);
+
+            // Undirected graph
+            if (w < adj[u][v]) {
+                adj[u][v] = w;
+                adj[v][u] = w;
+            }
+        }
+
+        int s;
+        scanf("%d", &s);
+
+        int *dist = (int *)malloc((n + 1) * sizeof(int));
+        int *visited = (int *)calloc(n + 1, sizeof(int));
+
+        // Initialize distances
+        for (int i = 1; i <= n; i++) {
+            dist[i] = INF;
+        }
+
+        dist[s] = 0;
+
+        // Dijkstra's algorithm
+        for (int count = 1; count <= n; count++) {
+
+            int current = -1;
+            int minDistance = INF;
+
+            // Find nearest unvisited node
+            for (int i = 1; i <= n; i++) {
+                if (!visited[i] && dist[i] < minDistance) {
+                    minDistance = dist[i];
+                    current = i;
+                }
+            }
+
+            if (current == -1)
+                break;
+
+            visited[current] = 1;
+
+            // Update neighbouring nodes
+            for (int i = 1; i <= n; i++) {
+
+                if (!visited[i] &&
+                    adj[current][i] != INF) {
+
+                    int newDistance =
+                        dist[current] + adj[current][i];
+
+                    if (newDistance < dist[i]) {
+                        dist[i] = newDistance;
+                    }
+                }
+            }
+        }
+
+        // Print answer, excluding source
+        for (int i = 1; i <= n; i++) {
+
+            if (i == s)
+                continue;
+
+            if (dist[i] == INF)
+                printf("-1");
+            else
+                printf("%d", dist[i]);
+
+            // Space between answers
+            int next = i + 1;
+
+            while (next <= n && next == s)
+                next++;
+
+            if (next <= n)
+                printf(" ");
+        }
+
+        printf("\n");
+
+        // Free memory
+        for (int i = 0; i <= n; i++) {
+            free(adj[i]);
+        }
+
+        free(adj);
+        free(dist);
+        free(visited);
+    }
+
+    return 0;
+}
